@@ -1,0 +1,13 @@
+﻿La génération a démarré 24/01/2018 21:20:33.
+     1>Projet "D:\Cranfield\HPC\HeatConductionMPI\HeatConductionMPI\HeatConductionMPI.vcxproj" sur le nœud 2 (Build cible(s)).
+     1>Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Cranfield\HPC\HeatConductionMPI\HeatConductionMPI\Debug\HeatConductionMPI.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files (x86)\Visual Leak Detector\lib\Win32" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Cranfield\HPC\HeatConductionMPI\HeatConductionMPI\Debug\HeatConductionMPI.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Cranfield\HPC\HeatConductionMPI\HeatConductionMPI\Debug\HeatConductionMPI.lib" /MACHINE:X86 Debug\main.obj
+     1>main.obj : error LNK2019: symbole externe non résolu _MPI_Comm_size@8 référencé dans la fonction _main
+     1>main.obj : error LNK2019: symbole externe non résolu _MPI_Comm_rank@8 référencé dans la fonction _main
+     1>main.obj : error LNK2019: symbole externe non résolu _MPI_Init@8 référencé dans la fonction _main
+     1>D:\Cranfield\HPC\HeatConductionMPI\HeatConductionMPI\Debug\HeatConductionMPI.exe : fatal error LNK1120: 3 externes non résolus
+     1>Génération du projet "D:\Cranfield\HPC\HeatConductionMPI\HeatConductionMPI\HeatConductionMPI.vcxproj" terminée (Build cible(s)) -- ÉCHEC.
+
+ÉCHEC de la build.
+
+Temps écoulé 00:00:00.58
