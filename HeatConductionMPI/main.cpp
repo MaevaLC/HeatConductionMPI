@@ -1,5 +1,5 @@
-#include "C:\Program Files (x86)\Microsoft SDKs\MPI\Include\mpi.h"
-//#include "mpi.h"
+//#include "C:\Program Files (x86)\Microsoft SDKs\MPI\Include\mpi.h"
+#include "mpi.h"
 
 #include <vector>
 #include <stdlib.h> // for malloc
@@ -98,7 +98,7 @@ int main(){
 		displs[i] = sum;
 		sum += sendcounts[i];
 	}
-	MPI_Scatterv(&problem.u_n[0], sendcounts, displs, MPI_DOUBLE, &problem.sub_u_n[0], (problem.s + 1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	//	MPI_Scatterv(&problem.u_n[0], sendcounts, displs, MPI_DOUBLE, &problem.sub_u_n[0], (problem.s + 1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	// define beginning and ending of each portions for each threads
 	int beginning = displs[rank];
 	int ending;
@@ -110,64 +110,55 @@ int main(){
 	}
 
 	/* Reorganize the vector u_n */
-	std::copy(problem.sub_u_n.begin(), problem.sub_u_n.end(), (problem.u_n.begin() + beginning));
+	//	std::copy(problem.sub_u_n.begin(), problem.sub_u_n.end(), (problem.u_n.begin() + beginning));	
 
-
-
-
-
-
-	printf("u_n %d %f\n", rank, problem.u_n[beginning]);
-	printf("ok %d\n", rank);
-
-
+	printf("%d    +    %f\n", rank, problem.u_n[ending]);
+	printf("%d    -    %f\n", rank, problem.u_n[ending]);
 
 	/* Calculte n = 1 and so on */
-	for (int j = 1; j < problem.n + 1; j++){
+	for (int j = 1; j < (problem.n + 1); j++){
 		// for a n, we compute n+1
-		if (beginning = 0) {
+		if (beginning == 0) {
 			problem.u_nplus1[0] = problem.u_n[0];
 			for (int i = 1; i < ending; i++){
 				problem.u_nplus1[i] = problem.u_n[i] + problem.r * (problem.u_n[i + 1] - (2 * problem.u_n[i]) + problem.u_n[i - 1]); // u_nplus1 is define accrding the scheme used
+				//problem.u_nplus1[i] = problem.u_n[i];
 			}
 		}
 		else {
 			for (int i = beginning; i < ending; i++){
 				problem.u_nplus1[i] = problem.u_n[i] + problem.r * (problem.u_n[i + 1] - (2 * problem.u_n[i]) + problem.u_n[i - 1]); // u_nplus1 is define accrding the scheme used
+				//problem.u_nplus1[i] = problem.u_n[i];
 			}
 		}
+
 		problem.u_nplus1[problem.s] = problem.u_n[problem.s];
 
 		// we need to exchange our information with the neighbour
 		// send forward, receive backward
 		if ((rank != (npes - 1)) && (rank != 0)) {
-			MPI_Sendrecv(&problem.u_n[ending - 1], 1, MPI_DOUBLE, rank + 1, 1, &problem.u_n[beginning - 1], 1, MPI_DOUBLE, rank - 1, 1, MPI_COMM_WORLD, &status);
+			MPI_Sendrecv(&problem.u_nplus1[ending - 1], 1, MPI_DOUBLE, rank + 1, 1, &problem.u_nplus1[beginning - 1], 1, MPI_DOUBLE, rank - 1, 1, MPI_COMM_WORLD, &status);
 		}
 		else {
-			if (rank == 0) MPI_Send(&problem.u_n[ending - 1], 1, MPI_DOUBLE, (rank + 1), 1, MPI_COMM_WORLD);
-			if (rank == (npes - 1)) MPI_Recv(&problem.u_n[beginning - 1], 1, MPI_DOUBLE, (npes - 2), 1, MPI_COMM_WORLD, &status);
-
+			if (rank == 0) MPI_Send(&problem.u_nplus1[ending - 1], 1, MPI_DOUBLE, (rank + 1), 1, MPI_COMM_WORLD);
+			if (rank == (npes - 1)) MPI_Recv(&problem.u_nplus1[beginning - 1], 1, MPI_DOUBLE, (npes - 2), 1, MPI_COMM_WORLD, &status);
 		}
 		// sent backward, receive forward
 		if ((rank != (npes - 1)) && (rank != 0)) {
-			MPI_Sendrecv(&problem.u_n[beginning], 1, MPI_DOUBLE, rank - 1, 1, &problem.u_n[ending], 1, MPI_DOUBLE, rank + 1, 1, MPI_COMM_WORLD, &status);
+			MPI_Sendrecv(&problem.u_nplus1[beginning], 1, MPI_DOUBLE, rank - 1, 2, &problem.u_nplus1[ending], 1, MPI_DOUBLE, rank + 1, 2, MPI_COMM_WORLD, &status);
 		}
 		else {
-			if (rank == 0) MPI_Recv(&problem.u_n[ending], 1, MPI_DOUBLE, (rank + 1), 1, MPI_COMM_WORLD, &status);
-			if (rank == (npes - 1)) MPI_Send(&problem.u_n[beginning], 1, MPI_DOUBLE, (npes - 2), 1, MPI_COMM_WORLD);
-
+			if (rank == 0) MPI_Recv(&problem.u_nplus1[ending], 1, MPI_DOUBLE, (rank + 1), 2, MPI_COMM_WORLD, &status);
+			if (rank == (npes - 1)) MPI_Send(&problem.u_nplus1[beginning], 1, MPI_DOUBLE, (npes - 2), 2, MPI_COMM_WORLD);
 		}
+
 		// we can update u_n
 		problem.u_n = problem.u_nplus1;
 	}
 
-
-
-	printf("u_n2 %d %f\n", rank, problem.u_n[beginning]);
-	printf("ok2 %d\n", rank);
-
-
-
+	for (int i = beginning; i < ending; i++){
+		printf("%d     %d     %f\n", rank, i, problem.u_n[i]);
+	}
 
 
 	/* Terminate the program */
