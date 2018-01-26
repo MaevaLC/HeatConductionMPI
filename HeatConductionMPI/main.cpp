@@ -1,9 +1,10 @@
-//#include "C:\Program Files (x86)\Microsoft SDKs\MPI\Include\mpi.h"
-#include "mpi.h"
+#include "C:\Program Files (x86)\Microsoft SDKs\MPI\Include\mpi.h"
+//#include "mpi.h"
 
 #include <vector>
 #include <stdlib.h> // for malloc
 #include <algorithm> // for std::copy
+#include <string>
 
 struct Problem {
 	double Tin_0; //!< initial condition Temperature
@@ -26,10 +27,12 @@ int main(){
 
 	int rank, npes;
 	MPI_Status status;
+	double t1, t2;
 
 	MPI_Init(0, 0);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &npes);
+	t1 = MPI_Wtime();
 
 	/* each process create a problem */
 	struct Problem problem;
@@ -42,8 +45,8 @@ int main(){
 		double Xmax = 1; // position at the right : 1 ft
 		double Tend = 0.5; // end time of simulation : 0.5h
 		double D = 0.1; // coefficient D = 0.1 ft²/h
-		double dx = 0.05; // space step = 0.05;
-		double dt = 0.01; // time step = 0.01;
+		double dx = 0.5; // space step = 0.05;
+		double dt = 0.1; // time step = 0.01;
 
 		problem.Tin_0 = Tin_0;
 		problem.Text_0 = Text_0;
@@ -112,9 +115,6 @@ int main(){
 	/* Reorganize the vector u_n */
 	//	std::copy(problem.sub_u_n.begin(), problem.sub_u_n.end(), (problem.u_n.begin() + beginning));	
 
-	printf("%d    +    %f\n", rank, problem.u_n[ending]);
-	printf("%d    -    %f\n", rank, problem.u_n[ending]);
-
 	/* Calculte n = 1 and so on */
 	for (int j = 1; j < (problem.n + 1); j++){
 		// for a n, we compute n+1
@@ -156,10 +156,37 @@ int main(){
 		problem.u_n = problem.u_nplus1;
 	}
 
-	for (int i = beginning; i < ending; i++){
-		printf("%d     %d     %f\n", rank, i, problem.u_n[i]);
+	std::vector<int> temp(problem.u_n.begin() + beginning, problem.u_n.begin() + ending);
+	std::copy(temp.begin(), temp.end(), problem.u_n.begin());
+
+	double *final_u_n;
+	final_u_n = (double*)malloc(sizeof(double)* (problem.s + 1));
+	MPI_Gatherv(&problem.u_n[0], sendcounts[rank], MPI_DOUBLE, final_u_n, sendcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+	if (rank == 0) {
+		for (int i = 0; i < problem.s + 1; i++){
+			printf("%d     %d     %f\n", rank, i, final_u_n[i]);
+		}
 	}
 
+	/* Process 0 write properly the results in a file */
+	if (rank == 0) {
+		FILE *fileFTCS; // file to store data
+
+		std::string name = "FTCS-";
+		std::string dxS = std::to_string(problem.dx);
+		name.append(dxS);
+		char* dxC = (char*)name.c_str();
+		fileFTCS = fopen(dxC, "w");
+
+
+		double x = 0;
+		for (int i = 0; i < (problem.s + 1); i++){
+			fprintf(fileFTCS, "%f %f\n", x, final_u_n[i]);
+			x += problem.dx;
+		}
+		fclose(fileFTCS);
+	}
 
 	/* Terminate the program */
 	free(sendcounts);
