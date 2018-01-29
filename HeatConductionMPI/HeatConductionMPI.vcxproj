@@ -64,8 +64,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="draft.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="v2.cpp" />
+    <ClCompile Include="v3.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
